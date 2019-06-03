@@ -76,6 +76,16 @@ func GetLocalIP() string {
 	return parts[0]
 }
 
+func SendResults(results string) {
+	// 循环获取当前的任务
+	resp, err := http.Post(url+"/results", "text/json", strings.NewReader(results))
+	if err != nil {
+		logrus.Errorf("上传结果出现错误：%s", err)
+	}
+	defer resp.Body.Close()
+}
+
+
 func Detect(taskid string, rules *nettest.Rules, localip string) *nettest.Results {
 	// 构建软件和IP的对应表
 	soft2ips := make(map[string][]string)
@@ -139,6 +149,9 @@ func main() {
 			results := Detect(newTaskID, &rules, localip)
 			bytes, _ := json.Marshal(results)
 			fmt.Print(string(bytes))
+
+			// 上报结果
+			SendResults(string(bytes))
 		}
 
 		time.Sleep(time.Second * 5)
